@@ -23,16 +23,15 @@
     animation.set($animation===1 ? 0 : 1)
   }, 5000)
   onDestroy(() => clearInterval(interval))
-  const timeAxisPadding = 40
-  $: dynamicPaddingForTimeAxis = $animation * timeAxisPadding //we need to squeeze the unwrapped BRG to make room for the time axis
+
   $: x2Scale = scaleLinear().domain(
     [0, 180, 180, 360]
   ).range(
     [
-      dynamicPaddingForTimeAxis/2, //offset the center by half the dynamic padding
+      0,
       $animation*halfWidth,
-      -$animation*halfWidth + dynamicPaddingForTimeAxis, //offset the left end of the BRG by the dynamic padding
-      dynamicPaddingForTimeAxis/2, //offset the center by half the dynamic padding
+      -$animation*halfWidth,
+      0,
     ]
   )
   $: y2 = $animation * halfHeight
@@ -51,14 +50,14 @@
     }
   }
   const circleDegrees:number[] = []
-  for(let i=180; i<360; ++i) { //push numbers 180 to 359
+  for(let i=180; i<360; ++i) {
     circleDegrees.push(i)
   }
-  for(let i=0; i<180; ++i) { //push numbers 0 to 179
+  for(let i=0; i<180; ++i) {
     circleDegrees.push(i)
   }
   circleDegrees.push(179.9) //this is now equal to [180, 181, ..., 359, 0, 1, ..., 179, 179.9]
-  $: topFactor = (12 + 3*$animation) / 16 //make the circle a little offset from the edge
+  $: topFactor = (12 + 3*$animation) / 16
   $: circlePathRadius = halfWidth * topFactor
   $: circlePath = circleDegrees.reduce(
     (d, degree) => {
@@ -69,34 +68,32 @@
     "M"
   )
   const ticks:{angle:number,label:string, dy:number}[] = [
-    {angle:180,     label: "180°",      dy: 15},
-    {angle:225,     label: "",          dy: 0},
-    {angle:270,     label: "270°",      dy: -5},
-    {angle:315,     label: "",          dy: 0},
-    {angle:0,       label: "0° (360°)", dy: 0},
-    {angle:45,      label: "",          dy: 0},
-    {angle:90,      label: "90°",       dy: -5},
-    {angle:135,     label: "",          dy: 0},
-    {angle:179.999, label: "180°",      dy: 15},
+    {angle:180,     label: "180°"},
+    {angle:225,     label: ""},
+    {angle:270,     label: "270°"},
+    {angle:315,     label: ""},
+    {angle:0,       label: "0° (360°)"},
+    {angle:45,      label: ""},
+    {angle:90,      label: "90°"},
+    {angle:135,     label: ""},
+    {angle:179.999, label: "180°"},
   ]
   $: lineData = ticks.map(t => getLineDataFromAngle(t.angle))
   $: ticksWithLabels = ticks.filter(t =>
     t.label.length > 0 //only allow ticks with a label
     && !(Math.floor(t.angle)===179 && $animation===0) //hide the 179.999 label if the animation is at 0
   )
-  const tickEndDy = -5
+
   $: textData = ticksWithLabels.map(t => {
     const { x1, y1 } = getLineDataFromAngle(t.angle)
     return {
       attr: {
         x: x1,
         y: y1,
-        dy: tickEndDy*$animation + (1 - $animation)*t.dy
       },
       label: t.label,
     }
   })
-  $: timeAxisTop = -halfHeight * topFactor
 </script>
 
 <main>
@@ -118,15 +115,6 @@
           {#each textData as text}
             <text {...text.attr}>{text.label}</text>
           {/each}
-        </g>
-
-        <g class="timeAxis" transform={`translate(${-halfWidth + timeAxisPadding - 10},0)`} opacity={Math.max(0, 10*($animation-0.9))}>
-          <text x={-20} y={timeAxisTop} dy={5} text-anchor="end">Now</text>
-          <line x1={-15} y1={timeAxisTop} x2={0} y2={timeAxisTop}/>
-          <line x1={0} y1={timeAxisTop} x2={0} y2={halfHeight}/>
-          <line x1={-15} y1={halfWidth} x2={0} y2={halfHeight}/>
-          <text x={-20} y={halfHeight} dy={-5} text-anchor="end">5 sec</text>
-          <text x={-20} y={halfHeight} dy={10} text-anchor="end">ago</text>
         </g>
       </g>
     </svg>
