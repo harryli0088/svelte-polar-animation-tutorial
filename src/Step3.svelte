@@ -71,12 +71,13 @@
             <line {...line}/>
           {/each}
 
-          <line x1={x2Scale(180)} y1={y2} x2={x2Scale(179.9)} {y2}/>
 
           {#each textData as text}
             <text {...text.attr}>{text.label}</text>
           {/each}
         </g>
+
+        <line x1={x2Scale(180)} y1={y2} x2={x2Scale(179.9)} {y2} stroke="red" stroke-width={3}/>
       </g>
     </svg>
   </div>
